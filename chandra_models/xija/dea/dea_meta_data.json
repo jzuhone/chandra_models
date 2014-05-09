@@ -1,0 +1,14 @@
+{
+    "state_cols": {
+        "pitch": {"units": "deg", "initialization":{ "value": "None", "times": "None"}},
+        "ccd_count": {"units": "None", "initialization":{ "value": "None", "times": "None"}},
+        "fep_count": {"units": "None", "initialization":{ "value": "None", "times": "None"}},
+        "clocking": {"units": "None", "initialization":{ "value": "None", "times": "None"}},
+        "vid_board": {"units": "None", "initialization":{ "value": "None", "times": "None"}},
+        "simpos": {"units": "None", "initialization":{ "value": "None", "times": "None"}}
+    }, 
+    "msids": {
+        "1deamzt": {"units": "degc", "initialization": { "value": "None", "times": "None"}}
+    },
+    "pseudo_msids": {}
+}

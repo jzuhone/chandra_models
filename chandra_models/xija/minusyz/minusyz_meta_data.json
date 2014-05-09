@@ -1,0 +1,15 @@
+{
+    "state_cols": {
+        "pitch": {"units": "deg", "initialization":{ "value": "None", "times": "None"}},
+    }, 
+    "msids": {
+        "tephin": {"units": "degf", "initialization": { "value": "None", "times": "None"}},
+        "tcylaft6": {"units": "degf", "initialization": { "value": "None", "times": "None"}},
+        "pmtank3t": {"units": "degf", "initialization": { "value": "None", "times": "None"}},
+        "tmzp_my": {"units": "degf", "initialization": { "value": "None", "times": "None"}}
+    },
+    "pseudo_msids": {
+        "tcylaft6_0": {"units":"degf", "initialization":{"offset_msid":"tcylaft6", "offset":3, "value": "None"}},
+        "pmtank3t_0": {"units":"degf", "initialization":{"offset_msid":"tcypmtank3tlaft6", "offset":0, "value": 80}}
+    }
+}

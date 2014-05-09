@@ -1,0 +1,11 @@
+{
+    "state_cols": {
+        "pitch": {"units": "deg", "initialization":{ "value": "None", "times": "None"}}
+    }, 
+    "msids": {
+        "aacccdpt": {"units": "degc", "initialization": { "value": "None", "times": "None"}}
+    },
+    "pseudo_msids": {
+            "aca0": {"units":"degc", "initialization":{"offset_msid":"tcylaft6", "offset":0, "value": -18}}
+    }
+}

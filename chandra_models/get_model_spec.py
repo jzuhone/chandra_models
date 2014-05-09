@@ -2,6 +2,7 @@
 Get Chandra model specifications
 """
 import os
+import json
 from astropy.io import ascii
 
 __all__ = ['get_xija_model_file', 'get_pline_guidelines']
@@ -9,12 +10,13 @@ __all__ = ['get_xija_model_file', 'get_pline_guidelines']
 FILEPATH = os.path.dirname(__file__)
 
 
-def get_xija_model_file(model_name):
+def get_xija_model_file(model_name, meta=False):
     """
-    Get file name of Xija model specification for the specified ``model_name``.
+    Get file name of Xija model specification file name for the specified ``model_name``.
+    Optionally return the meta data file name for the specified ``model_name``.
 
     Supported model names are: ``'aca'``, ``'acisfp'``, ``'dea'``, ``'dpa'``,
-    ``'psmc'``, ``'minusyz'``, and ``'pftank2t'``.
+    ``'psmc'``, ``'minusyz'``, ``'fwdblkhd'``, and ``'pftank2t'``.
 
     Example::
 
@@ -27,17 +29,68 @@ def get_xija_model_file(model_name):
       >>> model.calc()
 
     :param model_name: name of model
-    :returns: file name of the corresponding Xija model specification
+    :param meta: True or False, indicating whether or not to return the meta data file name.
+
+    :returns: file name of the corresponding Xija model specification as a string if meta=False,
+              or a tuple containing the model spec file name and the meta data file name.
     """
 
     model_name = model_name.lower()
     file_name = os.path.abspath(os.path.join(FILEPATH, 'xija', model_name,
                                              '{}_spec.json'.format(model_name)))
+    meta_file_name = os.path.abspath(os.path.join(FILEPATH, 'xija', model_name,
+                                             '{}_meta_data.json'.format(model_name)))
 
     if not os.path.exists(file_name):
         raise ValueError('Model name {!r} ({!r}) does not exist'.format(model_name, file_name))
 
-    return file_name
+    if meta:
+      return_data = (file_name, meta_file_name)
+    else:
+      return_data = file_name
+
+    return return_data
+
+
+def get_xija_model_spec(model_name, meta=False):
+    """
+    Get the Xija model specification for the specified ``model_name``.
+    Optionally return the meta data for the specified ``model_name``.
+
+    Supported model names are: ``'aca'``, ``'acisfp'``, ``'dea'``, ``'dpa'``,
+    ``'psmc'``, ``'minusyz'``, ``'fwdblkhd'``, and ``'pftank2t'``.
+
+    Example::
+
+      >>> import chandra_models
+      >>> import xija
+      >>> model_spec = chandra_models.get_xija_model_spec('acisfp')
+      >>> model = xija.XijaModel('acisfp', model_spec=model_spec,
+                                   start='2012:001', stop='2012:010')
+      >>> model.make()
+      >>> model.calc()
+
+    :param model_name: name of model
+    :param meta: True or False, indicating whether or not to return the meta data.
+
+    :returns: Xija model parameters for the specified model as a dictionary if meta=False,
+              or a tuple containing the model spec and the meta data, both as dictionaries.
+
+    """
+
+    model_name = model_name.lower()
+
+    if meta:
+      file_name, meta_file_name = get_xija_model_file(model_name, meta=True)
+      model_spec = json.load(open(file_name, 'r'))
+      model_meta = json.load(open(meta_file_name, 'r'))
+      return_data = (model_spec, model_meta)
+
+    else:
+      file_name = get_xija_model_file(model_name)
+      return_data = json.load(open(file_name, 'r'))
+
+    return return_data
 
 
 def get_pline_guidelines():

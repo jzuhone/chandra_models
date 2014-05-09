@@ -1,0 +1,11 @@
+{
+    "state_cols": {
+        "pitch": {"units": "deg", "initialization":{ "value": "None", "times": "None"}}
+    }, 
+    "msids": {
+        "pftank2t": {"units": "degf", "initialization": { "value": "None", "times": "None"}}
+    },
+    "pseudo_msids": {
+        "pf0tank2t": {"units":"degf", "initialization":{"offset_msid":"pftank2t", "offset":0, "value": "None"}}
+    }
+}
