@@ -29,7 +29,7 @@ class XijaModelRun(object):
 
     Example2::
       >>> import chandra_models
-      >>> init_dict = {"pitch":{"value":100}, "pf0tank2t":75}
+      >>> init_dict = {"pitch":{"value":100}, "pf0tank2t":{"value":75}}
       >>> tank = chandra_models.XijaModelRun('pftank2t', tstart='2014:001', tstop='2014:030',
                                              initial_values=init_dict)
       >>> plot(tank.tlm['date'], tank.model['dpa])
@@ -121,10 +121,10 @@ class XijaModelRun(object):
             if key in self.msids.keys():
                 self.__process_initial_values_helper(key, self.msids)
 
-            if key in self.model_info["pseudo_msids"].keys():
+            if key in self.pseudo_msids.keys():
                 self.__process_initial_values_helper(key, self.pseudo_msids)
 
-            if key in self.model_info["state_cols"].keys():
+            if key in self.state_cols.keys():
                 self.__process_initial_values_helper(key, self.state_cols)
 
     def _convert_initial_units(self):
