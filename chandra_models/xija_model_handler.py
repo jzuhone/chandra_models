@@ -20,21 +20,52 @@ def F2C(k):
 
 
 class XijaModelRun(object):
+    ''' Wrapper for running a Xija model and simplifying the setting of initial conditions.
 
-    def __init__(self, model_name, initial_values=None, tstop="2012:001", dt=328, numdays=30):
-        """
-        Run Xija Model
+    Example1::
+      >>> import chandra_models
+      >>> dpa = chandra_models.XijaModelRun('dpa', tstart='2014:001', tstop='2014:030')
+      >>> plot(dpa.tlm['date'], dpa.model['dpa])
 
-        init = {"pitch":{"value":v, "times":t}}
-        """
-        self.tstop = DateTime(tstop).secs
-        self.numdays = numdays
-        self.dt = dt
-        self.tstart = DateTime(tstop).secs - numdays * 24 * 3600
+    Example2::
+      >>> import chandra_models
+      >>> init_dict = {"pitch":{"value":100}, "pf0tank2t":75}
+      >>> tank = chandra_models.XijaModelRun('pftank2t', tstart='2014:001', tstop='2014:030',
+                                             initial_values=init_dict)
+      >>> plot(tank.tlm['date'], tank.model['dpa])
+
+    All Xija models defined in ``chandra_models`` are supported.
+
+
+
+    TODO: ****************focal plane model not supported yet****************
+
+
+
+    :param model_name: name of model
+    :param tstart: start time of model run
+    :param tstop: stop time of model run
+    :param initial_values: dictionary of initial values, see above for an example
+
+    :returns: XijaModelRun object containing the relevant model and telemetry data along with all
+              inputs
+
+    Notes:
+    Temperatures are input according to their engineering units, as specified in the meta data
+    file (read into self.model_info).
+
+
+   '''
+
+
+    def __init__(self, model_name, tstart="2012:001", tstop="2012:100", initial_values=None):
+
         self.model_name = model_name
         self.initial_values = initial_values
-        self.pars, self.model_info = chandra_models.get_xija_model_spec(model_name, meta=True)
+        self.tstop = DateTime(tstop).secs
+        self.tstart = DateTime(tstart).secs
 
+        self.pars, self.model_info = chandra_models.get_xija_model_spec(model_name, meta=True)
         self.state_cols = self.model_info["state_cols"]
         self.msids = self.model_info["msids"]
         self.pseudo_msids = self.model_info["pseudo_msids"]
@@ -46,7 +77,11 @@ class XijaModelRun(object):
         self._convert_output_units()
 
     def _convert_output_units(self):
+        ''' Convert calculated temps to their common engineering units (Celsius to Fahrenheit).
 
+        This converts the model outputs, which are always in Celsius, to their engineering units.
+        At this time, this only converts to Fahrenheit.
+        '''
         for node in self.model_info["msids"].keys():
             if self.msids[node]["units"].lower() == "degf":
                 self.model[node] = C2F(self.model[node])
@@ -57,6 +92,10 @@ class XijaModelRun(object):
                 self.model[node] = C2F(self.model[node])
 
     def __process_initial_values_helper(self, node, datastructure):
+        ''' Helper function that stores initial values in their appropriate locations, if specified.
+
+        This should work for msids, pseudo msids, and state values.
+        '''
         if node in datastructure.keys():
 
             value = self.initial_values[node]["value"]
@@ -72,6 +111,10 @@ class XijaModelRun(object):
                     datastructure[node]["initialization"]["times"] = times
 
     def _process_initial_values(self):
+        ''' Assign initial values, if specifed in initial_values keyword.
+
+        These values are stored in pre-defined datastructures.
+        '''
 
         for key in self.initial_values.keys():
 
@@ -85,7 +128,14 @@ class XijaModelRun(object):
                 self.__process_initial_values_helper(key, self.state_cols)
 
     def _convert_initial_units(self):
-        # No conversions for state_cols at this time
+        ''' Convert all initial values or offsets to Celsius.
+
+        This includes all default initial values or offsets, or initial values set manually via
+        the initial_values keyword.
+
+        This works only on msids and pseudo-msids, no conversions for state_cols at this time.
+
+        '''
         for node in self.msids.keys():
             if self.msids[node]["units"].lower() == "degf":
                 if isinstance(self.msids[node]["initialization"]["value"], (int, long, float,
@@ -104,6 +154,12 @@ class XijaModelRun(object):
                     self.pseudo_msids[node]["initialization"]["offset"] = offset * 5 / 9
 
     def _init_nodes(self, xijamodel):
+        ''' Initialize the nodes in the xijamodel object, if initial values are specified.
+
+        Since all pseudo-msids need to be initialized, for all pseudo-msids, if an initial value
+        is specified, it is used, otherwise the initial value is calculated based on an offset
+        from the associated node (e.g. tcylaft6_0 is set based on tcylaft6).
+        '''
         if self.initial_values:
             for node in self.initial_values.keys():
 
@@ -119,7 +175,6 @@ class XijaModelRun(object):
                         init_data["times"] = None
                     xijamodel.comp[node].set_data(init_data["value"], times=init_data["times"])
 
-        # We don"t ever specify pseudo msid times, so disregard this capability for now
         for node in self.pseudo_msids.keys():
             override = self.pseudo_msids[node]["initialization"]["value"]
             if not isinstance(override, (int, long, float, list, np.ndarray)):
@@ -130,18 +185,11 @@ class XijaModelRun(object):
             else:
                 xijamodel.comp[node].set_data(override)
 
-    def _calcmodel(self):
-        tstart = DateTime(self.tstart).date
-        tstop = DateTime(self.tstop).date
-
-        xijamodel = xija.ThermalModel(self.model_name, start=tstart, stop=tstop,
-                                      model_spec=self.pars)
-        self._init_nodes(xijamodel)
-        xijamodel.make()
-        xijamodel.calc()
-        self._get_model_output(xijamodel)
-
     def _get_model_output(self, xijamodel):
+        ''' Return the calculated values along with associated telemetry. Any telemetry mnemonic 
+        that is set via an initial value (or array of values) will only reflect the value(s)
+        manually set (i.e. not values from the engineering archive).
+        '''
 
         model = {}
 
@@ -156,3 +204,16 @@ class XijaModelRun(object):
 
         self.model = model
         self.tlm = tlm
+
+    def _calcmodel(self):
+        ''' Core xija routine for calculating model values.
+        '''
+        tstart = DateTime(self.tstart).date
+        tstop = DateTime(self.tstop).date
+
+        xijamodel = xija.ThermalModel(self.model_name, start=tstart, stop=tstop,
+                                      model_spec=self.pars)
+        self._init_nodes(xijamodel)
+        xijamodel.make()
+        xijamodel.calc()
+        self._get_model_output(xijamodel)
