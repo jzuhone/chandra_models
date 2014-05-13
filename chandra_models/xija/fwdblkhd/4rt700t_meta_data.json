@@ -1,0 +1,11 @@
+{
+    "state_cols": {
+        "pitch": {"units": "deg", "initialization":{ "value": "None", "times": "None"}}
+    }, 
+    "msids": {
+        "4rt700t": {"units": "degf", "initialization": { "value": "None", "times": "None"}}
+    },
+    "pseudo_msids": {
+        "4rt700t_0": {"units":"degf", "initialization":{"offset_msid":"4rt700t", "offset":0, "value": "None"}}
+    }
+}
